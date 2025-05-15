@@ -1,9 +1,9 @@
 <?php
+require_once '../includes/session_manager.php';
+ensure_session_started();
+$admin_id = check_admin_login();
+
 require_once '../components/connect.php';
-
-session_start();
-
-$admin_id = $_SESSION['admin_id'];
 
 if (!isset($admin_id)) {
     header('location:admin_login.php');

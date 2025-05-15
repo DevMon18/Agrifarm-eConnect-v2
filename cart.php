@@ -10,7 +10,9 @@ if (isset($_SESSION['user_id'])) {
    $user_id = '';
    header('location:user_login.php');
 }
-;
+
+require_once 'components/wishlist_cart.php';
+require_once 'components/count_items.php';
 
 $response = []; 
 

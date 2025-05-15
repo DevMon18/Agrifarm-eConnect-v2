@@ -4,7 +4,14 @@ require_once 'components/connect.php';
 
 session_start();
 
-$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '';
+if (isset($_SESSION['user_id'])) {
+   $user_id = $_SESSION['user_id'];
+} else {
+   $user_id = '';
+}
+
+require_once 'components/wishlist_cart.php';
+require_once 'components/count_items.php';
 
 $response = [];
 

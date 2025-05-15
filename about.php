@@ -9,7 +9,9 @@ if (isset($_SESSION['user_id'])) {
 } else {
    $user_id = '';
 }
-;
+
+require_once 'components/wishlist_cart.php';
+require_once 'components/count_items.php';
 
 ?>
 
@@ -47,6 +49,7 @@ if (isset($_SESSION['user_id'])) {
       </div>
    </section>
    <?php require_once 'components/footer.php'; ?>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
    <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
    <script src="js/script.js"></script>
    <script>
@@ -69,9 +72,7 @@ if (isset($_SESSION['user_id'])) {
             },
          },
       });
-
    </script>
-
 </body>
 
 </html>

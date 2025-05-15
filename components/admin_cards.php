@@ -1,14 +1,9 @@
 <?php
+require_once '../includes/session_manager.php';
+ensure_session_started();
+$admin_id = check_admin_login();
 
 require_once '../components/connect.php';
-
-session_start();
-
-$admin_id = $_SESSION['admin_id'];
-
-if (!isset($admin_id)) {
-    header('location:admin_login.php');
-}
 
 ?>
 <!DOCTYPE html>
@@ -19,28 +14,95 @@ if (!isset($admin_id)) {
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/index.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+        .stats-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3345;
+            margin-bottom: 0.25rem;
+        }
+        .stats-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(45deg, #4f46e5, #6366f1);
+        }
+        .bg-gradient-success {
+            background: linear-gradient(45deg, #059669, #10b981);
+        }
+        .bg-gradient-warning {
+            background: linear-gradient(45deg, #d97706, #fbbf24);
+        }
+        .bg-gradient-info {
+            background: linear-gradient(45deg, #0891b2, #22d3ee);
+        }
+        .content-header {
+            padding: 2rem 0 1rem;
+        }
+        .content-header h3 {
+            font-weight: 600;
+            color: #2c3345;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
 </head>
     <body class="hold-transition layout-fixed layout-navbar-fixed layout-footer-fixed antialiased">
-<!-- Dashboard cards header -->
+<!-- Dashboard header -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row align-items-center">
             <div class="col-sm-6">
-                <h3>Dashboard</h3>
+                <h3>Dashboard Overview</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Dashboard cards content -->
+<!-- Dashboard content -->
 <section class="content">
     <div class="container-fluid">
-        <!-- Pendings -->
+        <!-- Stats Cards -->
         <div class="row">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
+            <!-- Pending Orders -->
+            <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                <div class="dashboard-card p-4">
                     <?php
                         $total_pendings = 0;
                         $select_pendings = $conn->prepare("SELECT * FROM `orders` WHERE payment_status = ?");
@@ -51,16 +113,17 @@ if (!isset($admin_id)) {
                         }
                         }
                     ?>
-                    <span class="info-box-icon bg-warning elevation-1"><i class="bi bi-hourglass-split"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Pendings</span>
-                        <span class="info-box-number"><span>₱</span> <?= $total_pendings; ?></span>
+                    <div class="card-icon bg-gradient-warning text-white">
+                        <i class="bi bi-hourglass-split"></i>
                     </div>
+                    <h4 class="stats-value">₱<?= number_format($total_pendings, 2) ?></h4>
+                    <p class="stats-label mb-0">Pending Orders</p>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
+            <!-- Completed Orders -->
+            <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                <div class="dashboard-card p-4">
                     <?php
                         $total_completes = 0;
                         $select_completes = $conn->prepare("SELECT * FROM `orders` WHERE payment_status = ?");
@@ -71,102 +134,227 @@ if (!isset($admin_id)) {
                         }
                         }
                     ?>
-                    <span class="info-box-icon bg-success elevation-1"><i class="bi bi-bag-check-fill"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Completed Orders</span>
-                        <span class="info-box-number"><span>₱</span> <?= $total_completes; ?></span>
+                    <div class="card-icon bg-gradient-success text-white">
+                        <i class="bi bi-bag-check-fill"></i>
                     </div>
+                    <h4 class="stats-value">₱<?= number_format($total_completes, 2) ?></h4>
+                    <p class="stats-label mb-0">Completed Orders</p>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
+            <!-- Total Orders -->
+            <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                <div class="dashboard-card p-4">
                     <?php
                         $select_orders = $conn->prepare("SELECT * FROM `orders`");
                         $select_orders->execute();
                         $number_of_orders = $select_orders->rowCount()
                     ?>
-                        <span class="info-box-icon bg-warning elevation-1"><i class="bi bi-cart-check-fill"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Placed Orders</span>
-                        <span class="info-box-number"><?= $number_of_orders; ?></span>
+                    <div class="card-icon bg-gradient-primary text-white">
+                        <i class="bi bi-cart-check-fill"></i>
                     </div>
+                    <h4 class="stats-value"><?= $number_of_orders ?></h4>
+                    <p class="stats-label mb-0">Total Orders</p>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
+            <!-- Products -->
+            <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                <div class="dashboard-card p-4">
                     <?php
                         $select_products = $conn->prepare("SELECT * FROM `products`");
                         $select_products->execute();
                         $number_of_products = $select_products->rowCount()
                     ?>
-                    <span class="info-box-icon bg-success elevation-1"><i class="bi bi-check-lg"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Products Added</span>
-                        <span class="info-box-number"><?= $number_of_products; ?></span>
+                    <div class="card-icon bg-gradient-info text-white">
+                        <i class="bi bi-box-seam-fill"></i>
                     </div>
+                    <h4 class="stats-value"><?= $number_of_products ?></h4>
+                    <p class="stats-label mb-0">Total Products</p>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
-                    <?php
-                        $select_admins = $conn->prepare("SELECT * FROM `admins`");
-                        $select_admins->execute();
-                        $number_of_admins = $select_admins->rowCount()
-                    ?>
-                    <span class="info-box-icon bg-danger elevation-1"><i class="bi bi-person-fill-lock"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Admin</span>
-                        <span class="info-box-number"><?= $number_of_admins; ?></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
+            <!-- Users -->
+            <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                <div class="dashboard-card p-4">
                     <?php
                         $select_users = $conn->prepare("SELECT * FROM `users`");
                         $select_users->execute();
                         $number_of_users = $select_users->rowCount()
                     ?>
-                    <span class="info-box-icon bg-primary elevation-1"><i class="bi bi-people-fill"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Users</span>
-                        <span class="info-box-number"><?= $number_of_users; ?></span>
+                    <div class="card-icon bg-gradient-primary text-white">
+                        <i class="bi bi-people-fill"></i>
                     </div>
+                    <h4 class="stats-value"><?= $number_of_users ?></h4>
+                    <p class="stats-label mb-0">Total Users</p>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
+            <!-- Messages -->
+            <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                <div class="dashboard-card p-4">
                     <?php
                         $select_messages = $conn->prepare("SELECT * FROM `messages`");
                         $select_messages->execute();
                         $number_of_messages = $select_messages->rowCount()
                     ?>
-                    <span class="info-box-icon bg-success elevation-1"><i class="bi bi-envelope-fill"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Messages</span>
-                        <span class="info-box-number"><?= $number_of_messages; ?></span>
+                    <div class="card-icon bg-gradient-success text-white">
+                        <i class="bi bi-envelope-fill"></i>
+                    </div>
+                    <h4 class="stats-value"><?= $number_of_messages ?></h4>
+                    <p class="stats-label mb-0">Total Messages</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <!-- Sales Chart -->
+            <div class="col-12 col-lg-8 mb-4">
+                <div class="chart-card">
+                    <h5 class="mb-4">Sales Overview</h5>
+                    <div id="salesChart"></div>
+                </div>
+            </div>
+            
+            <!-- Orders Status Chart -->
+            <div class="col-12 col-lg-4 mb-4">
+                <div class="chart-card">
+                    <h5 class="mb-4">Orders Status</h5>
+                    <div id="ordersChart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="mb-4">Recent Orders</h5>
+                    <div class="table-responsive">
+                        <table id="recentOrders" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $select_orders = $conn->prepare("SELECT o.*, u.name as customer_name FROM `orders` o JOIN `users` u ON o.user_id = u.id ORDER BY o.placed_on DESC LIMIT 5");
+                                $select_orders->execute();
+                                while($order = $select_orders->fetch(PDO::FETCH_ASSOC)) {
+                                    $status_class = '';
+                                    switch($order['payment_status']) {
+                                        case 'pending': $status_class = 'warning'; break;
+                                        case 'completed': $status_class = 'success'; break;
+                                        default: $status_class = 'info';
+                                    }
+                                    ?>
+                                    <tr>
+                                        <td>#<?= $order['id'] ?></td>
+                                        <td><?= $order['customer_name'] ?></td>
+                                        <td><?= $order['total_products'] ?></td>
+                                        <td>₱<?= number_format($order['total_price'], 2) ?></td>
+                                        <td><span class="badge bg-<?= $status_class ?>"><?= ucfirst($order['payment_status']) ?></span></td>
+                                        <td><?= date('M d, Y', strtotime($order['placed_on'])) ?></td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="../js/jquery.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-    <script src="https://code.jquery.com/jquery-migrate-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
-    <script src="../js/index.js"></script>
-    <script src="../js/admin_script.js"></script>
-    <script src="../js/carousel.js"></script>
-    <script src="../js/input.js"></script>
-    <script src="../js/app.min.js"></script>
-    <script src="../js/admin_script.js"></script>
+
+<script>
+// Initialize DataTables
+$(document).ready(function() {
+    $('#recentOrders').DataTable({
+        pageLength: 5,
+        lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]]
+    });
+});
+
+// Sales Chart
+var salesOptions = {
+    series: [{
+        name: 'Sales',
+        data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
+    }],
+    chart: {
+        height: 350,
+        type: 'area',
+        toolbar: {
+            show: false
+        }
+    },
+    colors: ['#4f46e5'],
+    fill: {
+        type: 'gradient',
+        gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.7,
+            opacityTo: 0.2,
+            stops: [0, 90, 100]
+        }
+    },
+    stroke: {
+        curve: 'smooth'
+    },
+    xaxis: {
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep']
+    },
+    tooltip: {
+        theme: 'dark'
+    }
+};
+
+var salesChart = new ApexCharts(document.querySelector("#salesChart"), salesOptions);
+salesChart.render();
+
+// Orders Status Chart
+var ordersOptions = {
+    series: [44, 55, 13],
+    chart: {
+        type: 'donut',
+        height: 350
+    },
+    labels: ['Pending', 'Completed', 'Processing'],
+    colors: ['#fbbf24', '#10b981', '#4f46e5'],
+    legend: {
+        position: 'bottom'
+    },
+    responsive: [{
+        breakpoint: 480,
+        options: {
+            chart: {
+                width: 200
+            },
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }]
+};
+
+var ordersChart = new ApexCharts(document.querySelector("#ordersChart"), ordersOptions);
+ordersChart.render();
+</script>
+
 </body>
 </html>

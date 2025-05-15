@@ -12,6 +12,7 @@ if(isset($_SESSION['user_id'])){
 };
 
 require_once 'components/wishlist_cart.php';
+require_once 'components/count_items.php';
 
 if(isset($_POST['delete'])){
    $wishlist_id = $_POST['wishlist_id'];
